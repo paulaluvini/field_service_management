@@ -217,9 +217,9 @@ def add_constraint_matrix(my_problem, data):
     for j in data.ordenes:
         indices = []
         values = []
-        for i in range(0,data.cantidad_trabajadores):
-            for t in range(0,data.turnos):
-                for d in range(0,data.dias):
+        for i in range(data.cantidad_trabajadores):
+            for t in range(data.turnos):
+                for d in range(data.dias):
                     indices.append(data.indices['T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
                     values.append(1)
         #Hasta acá tengo todos los trabajadores, ahora tengo que agregarle el id de la orden y la cantidad de trabajadores necesarios restando (porque está del otro lado de la igualdad)
@@ -227,24 +227,37 @@ def add_constraint_matrix(my_problem, data):
         values.append(vars(j)['trabajadores_necesarios'] * -1)
         row = [indices,values]
         my_problem.linear_constraints.add(lin_expr=[row], senses=['E'], rhs= [0])
-
-    # Esto me ayudo a entender la restriccion
-    #print(row[0])
-    #print(data.nombres[indices[299]])
-    #print(data.nombres[indices[300]])
     
-    # Se asume que cada orden de trabajo se puede realizar utilizando un turno (incluye 1 día), y no se pueden realizar varias ordenes en un mismo turno si comparten trabajadores. 
+    # Una orden se debe realizar en un solo horario.
+    
+    for t in range(data.turnos):
+        for d in range(data.dias):
+            indices = []
+            values = []
+            for j in data.ordenes:
+                indices.append(data.indices['H'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
+                values.append(1)
+            row = [indices,values]
+            my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [1.0]) #aca determino que la suma de values tiene que ser menor o igual a 1 trabajador. 
+    
+    # Se asume que cada orden de trabajo se puede realizar utilizando un turno, y no se pueden realizar varias ordenes en un mismo turno 
+    # si comparten trabajadores. 
     
     for i in range(data.cantidad_trabajadores):
         for t in range(data.turnos):
             for d in range(data.dias):
                 indices = []
                 values = []
-                for j in range(0,data.cantidad_ordenes):
-                    indices.append(data.indices['T'+str(i)+'-'+str(j)+'-'+str(t)+'-'+str(d)])
+                for j in data.ordenes:
+                    indices.append(data.indices['T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
                     values.append(1)
                 row = [indices,values]
-                my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [1]) #aca determino que la suma de values tiene que ser menor o igual a 1 trabajador. 
+                my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [1.0]) #aca determino que la suma de values tiene que ser menor o igual a 1 trabajador. 
+    
+    # Esto me ayudo a entender la restriccion
+    #print(row[0])
+    #print(data.nombres[indices[299]])
+    #print(data.nombres[indices[300]])
     
     # Ahora necesito asignar salarios a los trabajadores: si hay un turno y horas trabajadas --> cobran un salario
     # Intenté hacerlo directamente en el populate_by_row cuando creo las variables pero no me funcionaba. De nuevo, lo que comentaba Wen:
@@ -262,20 +275,30 @@ def add_constraint_matrix(my_problem, data):
         indices.append(data.indices['W'+'-'+str(i)])
         values.append(-1)
         row = [indices,values]
-        my_problem.linear_constraints.add(lin_expr=[row], senses=['E'], rhs= [0])
+        my_problem.linear_constraints.add(lin_expr=[row], senses=['E'], rhs= [0.0])
     
-    # Ningun trabajador puede trabajar los 6 dıas de la planificacion. Creamos una variable que sea 1 cuando el trabajador trabaje en ese día??
+    # Ningun trabajador puede trabajar los 6 dıas de la planificacion. Creamos una variable que sea 1 cuando el trabajador trabaje en ese día.
+   
+    for i in range(0,data.cantidad_trabajadores):
+        indices = []
+        values = []
+        for d in range(0,data.dias):
+            indices.append(data.indices['d'+str(i)+'-'+str(d)])
+            values.append(1)
+        row = [indices,values]
+        my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [5.0])
 
-    # for i in range(data.cantidad_trabajadores):
-    #     print(i)
-    #     indices = []
-    #     values = []
-    #     for d in range(data.dias):
-    #         indices.append(data.indices[''+str(i)+'-'+str(d)])
-    #         values.append()
-    #     row = [indices,values]
-    #     my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [5]) # puede trabajar 5 dias o menos
-    
+    # Ningún trabajador puede trabajar los 5 turnos de un día.
+    for i in range(0,data.cantidad_trabajadores):
+        indices = []
+        values = []
+        for t in range(0,data.turnos):
+            indices.append(data.indices['t'+str(i)+'-'+str(t)])
+            values.append(1)
+        row = [indices,values]
+        my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [4.0])
+
+
 def populate_by_row(my_problem, data):
 
     ### Definimos las variables.
@@ -293,15 +316,35 @@ def populate_by_row(my_problem, data):
     ## j  = orden
     ## t  = turno
     ## d  = dia
-    
     for i in range(0,data.cantidad_trabajadores):
-        for j in range(0,data.cantidad_ordenes): 
+        for j in data.ordenes: 
             for t in range(0,data.turnos):
                 for d in range(0,data.dias):
                     coeficientes_funcion_objetivo.append(0) #Creo la variable con coeficiente 0: sólo la necesito para "tenerla" pero en la función objetivo no interviene
-                    data.nombres.append('T'+str(i)+'-'+str(j)+'-'+str(t)+'-'+str(d))
-                    data.indices['T'+str(i)+'-'+str(j)+'-'+str(t)+'-'+str(d)] = len(coeficientes_funcion_objetivo)-1
+                    data.nombres.append('T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d))
+                    data.indices['T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)] = len(coeficientes_funcion_objetivo)-1
+    
+    for t in range(data.turnos):
+        for d in range(data.dias):
+            for j in data.ordenes:
+                coeficientes_funcion_objetivo.append(0) #Creo la variable con coeficiente 0: sólo la necesito para "tenerla" pero en la función objetivo no interviene
+                data.nombres.append('H'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d))
+                data.indices['H'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)] = len(coeficientes_funcion_objetivo)-1
 
+    # Días de trabajo
+    for i in range(0,data.cantidad_trabajadores):
+        for d in range(0,data.dias):
+            coeficientes_funcion_objetivo.append(0) 
+            data.nombres.append('d'+str(i)+'-'+str(d))
+            data.indices['d'+str(i)+'-'+str(d)] = len(coeficientes_funcion_objetivo)-1
+    
+    # Turnos de trabajo
+    for i in range(0,data.cantidad_trabajadores):
+        for t in range(0,data.turnos):
+            coeficientes_funcion_objetivo.append(0)
+            data.nombres.append('t'+str(i)+'-'+str(t))
+            data.indices['t'+str(i)+'-'+str(t)] = len(coeficientes_funcion_objetivo)-1
+    
     #print("Todas las variables que cree:")              
     #print(data.nombres)
     
@@ -311,15 +354,13 @@ def populate_by_row(my_problem, data):
     print(len(coeficientes_funcion_objetivo))
     
     for trabajador in range(data.cantidad_trabajadores):
-        coeficientes_funcion_objetivo.append(-2)
+        coeficientes_funcion_objetivo.append(-1)
         data.nombres.append('W'+'-'+str(trabajador))
         data.indices['W'+'-'+str(trabajador)] = len(coeficientes_funcion_objetivo)-1
 
-    print(len(coeficientes_funcion_objetivo))
     # Creo esta variable auxiliar para usar después en el add de my_problem
     # Las variables de órdenes, trabajadores son binarias
     largo_binarias = len(coeficientes_funcion_objetivo)
-
     lower_bound = [0]*largo_binarias 
     upper_bound = [1]*largo_binarias 
 
@@ -347,7 +388,11 @@ def solve_lp(my_problem, data):
     status = my_problem.solution.get_status()
     status_string = my_problem.solution.get_status_string(status_code = status)
 
-    print(len(x_variables))
+    for item in range(len(x_variables)):
+        if x_variables[item] == 1:
+            print(data.nombres[int(item)])
+            print(data.indices[data.nombres[int(item)]])
+    
     print('Funcion objetivo: ',objective_value)
     print('Status solucion: ',status_string,'(' + str(status) + ')')
 

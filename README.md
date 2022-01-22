@@ -61,5 +61,6 @@ La resolución del trabajo consiste en la realización de modelos que se adecuen
 Inicialmente tenemos información cantidad de trabajadores, cantidad de ordenes, conflictos entre trabajadores, ordenes correlativas, ordenes conflictivas, ordenes repetitivas. 
 
 
-
-$ \sum_i \sum_j x_ij =Z_j*T_0 $ 
+```math
+ \sum_i \sum_j x_ij =Z_j*T_0 
+```

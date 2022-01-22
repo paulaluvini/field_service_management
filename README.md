@@ -7,7 +7,7 @@ El problema formalmente es el siguiente. Contamos con una cantidad T de trabajad
 
 
 No toda orden de trabajo tiene que ser resuelta.
-\item Ningú trabajador puede trabajar los 6 días de la planiﬁcación.
-\item Ningún trabajador puede trabajar los 5 turnos de un día.
-\item Hay pares de órdenes de trabajo que no pueden ser satisfechas en turnos consecutivos de un trabajador (Si bien en este problema no nos preocupamos por el ruteo sino solo por la asignación, hay órdenes tan lejanas geográficamente que no se podrían satisfacer consecutivamente).
-Una órden de trabajo debe tener asignada sus To trabajadores en un mismo turno para poder ser resuelta.
+- Ningú trabajador puede trabajar los 6 días de la planiﬁcación.
+- Ningún trabajador puede trabajar los 5 turnos de un día.
+- Hay pares de órdenes de trabajo que no pueden ser satisfechas en turnos consecutivos de un trabajador (Si bien en este problema no nos preocupamos por el ruteo sino solo por la asignación, hay órdenes tan lejanas geográficamente que no se podrían satisfacer consecutivamente).
+- Una órden de trabajo debe tener asignada sus To trabajadores en un mismo turno para poder ser resuelta.

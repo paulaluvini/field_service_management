@@ -69,7 +69,7 @@ class Orden:
     def csatisfecha(self, v):
         self.satisfecha=v
         
-
+#Creo clase para asignar los trabajadores a la tarea.
 class FieldWorkAssignment:
     def __init__(self):
         self.cantidad_trabajadores = 0
@@ -110,8 +110,7 @@ class FieldWorkAssignment:
             orden.load(row)
             self.ordenes.append(orden)
             
-        # -- Facundo -- Pruebas y prints para corroborar que la estructura se comporte de acuerdo a los pensado   
-            
+        
         #print(self.ordenes[1].cid())
         #print(self.ordenes[1].cbeneficio())
         #print(self.ordenes[1].ctrabajadores_necesarios())
@@ -213,19 +212,25 @@ def add_constraint_matrix(my_problem, data):
     # Acá lo pienso como que la suma de los trabajadores que pertenezcan a la orden j tienen que ser exactamente iguales a trabajadores_necesarios
     # Ej:   X_111J + X_211J + X_311J + ... = Zj * trabajadores_necesarios
     # Si Zj = 1 --> orden resuelta porque no tiene ni más ni menos trabajadores. 
-    
+    #Por cada orden:
     for j in data.ordenes:
         indices = [] 
         values = []
+        #Y cada trabajador
         for i in range(data.cantidad_trabajadores):
+            #Y cada turno
             for t in range(data.turnos):
+                # Y cada día
                 for d in range(data.dias): 
+                    #En el indice anoto, trabajador, orden id, turno y día
                     indices.append(data.indices['T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
                     values.append(1)
         #Hasta acá tengo todos los trabajadores, ahora tengo que agregarle el id de la orden y la cantidad de trabajadores necesarios restando (porque está del otro lado de la igualdad)
         indices.append(data.indices['O'+str(vars(j)['id'])])
+        #Trabajadores necesarios
         values.append(vars(j)['trabajadores_necesarios'] * -1)
         row = [indices,values]
+        #En la restricción debe cumplirse por igualda. Si es negativa no alcancé la cantidad de trabajadores necesarios, si es positiva estaría usando más trabajadores de los necesarios, dado que los trabajadores son un costo para la empresa voy a tratar de utilizar los menos posible, eso se logra con la igualdad.
         my_problem.linear_constraints.add(lin_expr=[row], senses=['E'], rhs= [0.0])
     
     # Una orden se debe realizar en un solo horario. Creo una variable que relacione a las órdenes con el día y el horario.
@@ -235,9 +240,12 @@ def add_constraint_matrix(my_problem, data):
         values = []
         for t in range(data.turnos):
             for d in range(data.dias):
+
                 indices.append(data.indices['H'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
                 values.append(1)
             row = [indices,values]
+
+            #Solo puede ser realizada en un día y horario
             my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [1.0]) 
 
     # los trabajadores están linkeados al horario de la orden.
@@ -311,6 +319,8 @@ def add_constraint_matrix(my_problem, data):
                     values.append(1)
             row = [indices,values]
             my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [4.0])
+
+    
 
 
 def populate_by_row(my_problem, data):

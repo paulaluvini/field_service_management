@@ -58,9 +58,15 @@ La resolución del trabajo consiste en la realización de modelos que se adecuen
 
 # Resolución 
 
-Inicialmente tenemos información cantidad de trabajadores, cantidad de ordenes, conflictos entre trabajadores, ordenes correlativas, ordenes conflictivas, ordenes repetitivas. 
+Inicialmente tenemos información cantidad de trabajadores, cantidad de ordenes, cantidad de trabajadores necesarios, beneficios de cada orden, conflictos entre trabajadores, ordenes correlativas, ordenes conflictivas, ordenes repetitivas. 
 
+- Para que una orden se realice debe tener asignado la cantidad de trabajadores necesarios. 
 
 ```math
- \sum_i \sum_j x_ij =Z_j*T_0 
+trabajadores asignados a cada orden >= cantidad de trabajadores necesarios
 ```
+Como los trabajadores generan un costo, cumplimos la restricción con igual.
+```math
+trabajadores asignados a cada orden - la cantidad de trabajadores necesarios de cada orden = 0 
+```
+

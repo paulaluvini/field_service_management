@@ -320,8 +320,55 @@ def add_constraint_matrix(my_problem, data):
             row = [indices,values]
             my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [4.0])
 
+    # Hay pares de ordenes de trabajo que no pueden ser satisfechas en turnos consecutivos de un trabajador
     
+    turnos_conflictivos = [[0,1],[1,2],[2,3],[3,4],[1,0],[2,1],[3,2],[4,3]] #Creamos esta lista con los turnos consecutivos (ida y vuelta)
+    for i in range(0,data.cantidad_trabajadores):
+        for d in range(data.dias):
+            for conflictivas in data.ordenes_conflictivas:
+                for tu in turnos_conflictivos:
+                    #print('t')
+                    #print(data.nombres[data.indices['T'+str(i)+'-'+str(conflictivas[0])+'-'+str(tu[0])+'-'+str(d)]])# to check
+                    #print(data.nombres[data.indices['T'+str(i)+'-'+str(conflictivas[1])+'-'+str(tu[1])+'-'+str(d)]])
+                    indices = []
+                    indices.append(data.indices['T'+str(i)+'-'+str(conflictivas[0])+'-'+str(tu[0])+'-'+str(d)])
+                    indices.append(data.indices['T'+str(i)+'-'+str(conflictivas[1])+'-'+str(tu[1])+'-'+str(d)])
+                    values=[1,1]
+                    row = [indices, values]
+                    my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs=[1.0])
+    
+    # Existen algunos pares de ordenes de trabajo correlativas. 
+    # Un par ordenado de ordenes correlativas A y B, indica que si se satisface A, entonces debe satisfacerse B ese mismo dia en el turno consecutivo.
+    
+    turnos_correlativos = [[0,1],[1,2],[2,3],[3,4]] #Creamos esta lista con los turnos consecutivos
+    for d in range(data.dias):
+        for correlativas in data.ordenes_correlativas:
+            for tu in turnos_correlativos:
+                #print('t')
+                #print(data.nombres[data.indices['H'+str(correlativas[0])+'-'+str(tu[0])+'-'+str(d)]])# to check
+                #print(data.nombres[data.indices['H'+str(correlativas[1])+'-'+str(tu[1])+'-'+str(d)]])
+                indices = []
+                indices.append(data.indices['H'+str(correlativas[0])+'-'+str(tu[0])+'-'+str(d)])
+                indices.append(data.indices['H'+str(correlativas[1])+'-'+str(tu[1])+'-'+str(d)])
+                values=[1.0,1.0* -1]
+                row = [indices, values]
+                my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs=[0.0])
 
+    # Tengo que restringir que la primera orden no puede ocurrir en el ultimo turno y la segunda no puede ocurrir en el primero.
+
+    turnos_imposibles = [4,0]
+    for d in range(data.dias):
+        for correlativas in data.ordenes_correlativas:
+            #print('t')
+            #print(data.nombres[data.indices['H'+str(correlativas[0])+'-'+str(turnos_imposibles[0])+'-'+str(d)]])# to check
+            #print(data.nombres[data.indices['H'+str(correlativas[1])+'-'+str(turnos_imposibles[1])+'-'+str(d)]])
+            indices = []
+            indices.append(data.indices['H'+str(correlativas[0])+'-'+str(turnos_imposibles[0])+'-'+str(d)])
+            indices.append(data.indices['H'+str(correlativas[1])+'-'+str(turnos_imposibles[1])+'-'+str(d)])
+            values=[1.0,1.0]
+            row = [indices, values]
+            #print(row)
+            my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs=[0.0])
 
 def populate_by_row(my_problem, data):
 
@@ -361,7 +408,6 @@ def populate_by_row(my_problem, data):
     ### Agregar todas las variables cargadas en coeficientes_funcion_objetivo
     
     # Agrego momentáneamente a los trabajadores como si todos ganaran lo mismo, 10.
-
     
     for i in range(data.cantidad_trabajadores):
         for t in range(data.turnos):
@@ -404,7 +450,6 @@ def solve_lp(my_problem, data):
     for item in range(len(x_variables)):
         if x_variables[item] == 1:
             print(data.nombres[int(item)])
-            #print(data.indices[data.nombres[int(item)]])
     
     print('Funcion objetivo: ',objective_value)
     print('Status solucion: ',status_string,'(' + str(status) + ')')

@@ -3,73 +3,19 @@ import cplex
 import numpy as np
 
 TOLERANCE =10e-6 
-
-## --- Facundo -- Busco una forma de plasmar el overleaf en una expresiòn, què necesitarìa? què estructura de datos responde a la flexibilidad de datos que requiero?
-
-##for i in range(0,9)
-#	for j in range(0,9)
-#          suma=trabajador[i].auxj[0]*1000+trabajador[i].auxj[1]*1200+trabajador[i].auxj[2]*1400+trabajador[i].auxj[3]*1500
-          
-#trabajador[0,0,0,0,0]
-
-
-## --- Facundo --- Opto por hacer una clase Trabajador con atributos y mètodos, para poder indexar tanto los trabajadores
-## como las òrdenes con 1 solo ìndice y acceder como necesite  a sus atributos mediante mètodos
-
-
-class Trabajador:
-    def __init__(self):
-    # ---Facundo asigna turno 2 a trabajadores
-    #    self.turno = [0,1,0,0,0] #de 0 a 4
-    # ---Facundo    
-    # Paula 13-01: esto es necesario tenerlo así? creo que no hace falta crear estas listas
-        self.turno = [0,0,0,0,0] #de 0 a 4
-        self.dia = [0,0,0,0,0,0] #de 0 a 5
-        self.orden = [0,0,0,0,0,0,0,0,0,0] #de 0 a 9 
-        self.auxj = [0,0,0,0] #de 0 a 3 si esta en el rango 0  entre 0 y 5, rango 1 entre 6 y 10
-
-    def torden(self):
-    	return self.orden 
-    	
-    def tdia(self):
-    	return self.dia
-    	
-    def tturno(self):
-    	return self.turno
-    
-    def tauxj(self):
-    	return self.auxj
-    	
+   
 class Orden:
     def __init__(self):
         self.id = 0
         self.beneficio = 0
         self.trabajadores_necesarios = 0
         
-        ## ---Facundo--  Agrego una variable binaria que indica si la Orden se encuentra satisfecha o no, para que sea interpetable por Cplex?
-        
-        self.satisfecha = 0
-    
     def load(self, row):
         self.id = int(row[0])
         self.beneficio = int(row[1])
         self.trabajadores_necesarios = int(row[2])
         
-        
-      ## --Facundo-- Agrego mètodos para poder acceder a los atributos de cada una de las òrdenes.
-    def cid(self):
-    	return self.id 
-    	
-    def cbeneficio(self):
-    	return self.beneficio
-    	
-    def ctrabajadores_necesarios(self):
-    	return self.trabajadores_necesarios
-    
-    def csatisfecha(self, v):
-        self.satisfecha=v
-        
-#Creo clase para asignar los trabajadores a la tarea.
+
 class FieldWorkAssignment:
     def __init__(self):
         self.cantidad_trabajadores = 0
@@ -93,11 +39,7 @@ class FieldWorkAssignment:
 
         # Leemos la cantidad de trabajadores
         self.cantidad_trabajadores = int(f.readline())
-        self.trabajadores = []
-        for i in range(self.cantidad_trabajadores): 
-            trab = Trabajador()
-            self.trabajadores.append(trab)
-        
+      
         # Leemos la cantidad de ordenes
         self.cantidad_ordenes = int(f.readline())
         
@@ -105,39 +47,10 @@ class FieldWorkAssignment:
         self.ordenes = []
         for i in range(self.cantidad_ordenes):
             row = f.readline().replace("\n",'').split(' ')
-            ## Facundo --  limpiado el \n print(row)
             orden = Orden()
             orden.load(row)
             self.ordenes.append(orden)
             
-        
-        #print(self.ordenes[1].cid())
-        #print(self.ordenes[1].cbeneficio())
-        #print(self.ordenes[1].ctrabajadores_necesarios())
-        #print("linea 49")
-        
-        #print(self.trabajadores[1].tturno()[1]) # me dice si el tabajador 2 se encuentra asignado al turno 2
-        
-        
-        ## -- Facundo -- 
-        ## al tenerlo instanciado como un array de clases, puedo ingresar a cada trabajador con un indice
-        ## i-esimo como se plantea en el modelo matemàtico, para leer sus atributos siendo
-        ## trabajadores[i].torden()[j] la j-esima  orden   a la cuàl està asignado 
-        ## trabajadores[i].tdia()[d] el   d-esimo  dia       al cuàl està asignado
-        ## trabajadores[i].tturno()[t]el  t-esimo  turno     al cuàl està asignado
-        
-        ## -- Facundo -- 
-        
-        
-        # imagino que para cargar cada una de las restricciones lineales se podrà hacer de la forma bucle+ indice+acceso a atributo +  càlculo/restricciòn, guardando esto en donde corresponda (sea modificar el estado de una orden o si el trabajador se encuentra en uno de los rangos de òrdenes)
-        
-        # EJemplo
-        ## SI ordenes[i].ctrabajadores_necesarios()== sumo trabajadores que tengan mismo turno dia y esta orden
-        ## ENTONCES ordenes[i].csatisfecha(1) la orden està satisfecha
-        
-        #print(self.trabajadores[1].tdia())
-        #print(self.trabajadores[1].torden()) 
-        #print("linea 99")
         
         # Leemos la cantidad de conflictos entre los trabajadores
         cantidad_conflictos_trabajadores = int(f.readline())
@@ -275,25 +188,7 @@ def add_constraint_matrix(my_problem, data):
                     values.append(1)
                 row = [indices,values]
                 my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [1.0]) #aca determino que la suma de values tiene que ser menor o igual a 1 trabajador. 
-    
-    # Ahora necesito asignar salarios a los trabajadores: si hay un turno y horas trabajadas --> cobran un salario
-    # Intenté hacerlo directamente en el populate_by_row cuando creo las variables pero no me funcionaba. De nuevo, lo que comentaba Wen:
-    # crear primero todas las variables (con append 0) y después si tienen un valor agregarlo: es un graaan vector con todas variables multiplicadas por valores o ceros según sea necesario.
-    # Pruebo hacerlo como la 1er restriccion, creo una variable de salarios: es por trabajador pero granularidad de jtd.
-
-    for i in range(0,data.cantidad_trabajadores):
-        indices = []
-        values = []
-        for j in data.ordenes:    
-            for t in range(0,data.turnos):
-                for d in range(0,data.dias):
-                    indices.append(data.indices['T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
-                    values.append(1)
-                    indices.append(data.indices['W'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
-                    values.append(-1)
-                    row = [indices,values]
-                    my_problem.linear_constraints.add(lin_expr=[row], senses=['E'], rhs= [0.0])
-    
+        
     # Ningun trabajador puede trabajar los 6 dıas de la planificacion. 
    
     for i in range(0,data.cantidad_trabajadores):     
@@ -318,7 +213,7 @@ def add_constraint_matrix(my_problem, data):
         indices = []
         values = []
         for turno in range(data.turnos):
-            for dia in range(data.cantidad_dias):
+            for dia in range(data.dias):
                 for orden in data.ordenes:
                     indices.append(data.indices['T'+str(trabajador)+'-'+str(vars(orden)['id'])+'-'+str(turno)+'-'+str(dia)])
                     values.append(1)
@@ -327,6 +222,7 @@ def add_constraint_matrix(my_problem, data):
         row = [indices,values]
         my_problem.linear_constraints.add(lin_expr=[row], senses=["E"], rhs=[0])
     
+    #todos los salarios de los tramos tienen que ser igual al total
     for trabajador in range(data.cantidad_trabajadores):
         indices = []
         values = []
@@ -354,7 +250,7 @@ def add_constraint_matrix(my_problem, data):
         
         indices = []
         values = []
-        indices.append(data.indices['w1'+'-'+str(trabajador)])
+        indices.append(data.indices['W1'+'-'+str(trabajador)])
         values.append(1)
         row = [indices,values]
         my_problem.linear_constraints.add(lin_expr=[row], senses=["L"], rhs=[5])
@@ -398,7 +294,7 @@ def add_constraint_matrix(my_problem, data):
      
         indices = []
         values = []
-        indices.append(data.indices['W3'+str(trabajador)])
+        indices.append(data.indices['W3'+'-'+str(trabajador)])
         values.append(1)
         indices.append(data.indices['A3'+str(trabajador)])
         values.append(-5)
@@ -435,9 +331,6 @@ def add_constraint_matrix(my_problem, data):
         for d in range(data.dias):
             for conflictivas in data.ordenes_conflictivas:
                 for tu in turnos_conflictivos:
-                    #print('t')
-                    #print(data.nombres[data.indices['T'+str(i)+'-'+str(conflictivas[0])+'-'+str(tu[0])+'-'+str(d)]])# to check
-                    #print(data.nombres[data.indices['T'+str(i)+'-'+str(conflictivas[1])+'-'+str(tu[1])+'-'+str(d)]])
                     indices = []
                     indices.append(data.indices['T'+str(i)+'-'+str(conflictivas[0])+'-'+str(tu[0])+'-'+str(d)])
                     indices.append(data.indices['T'+str(i)+'-'+str(conflictivas[1])+'-'+str(tu[1])+'-'+str(d)])
@@ -452,9 +345,6 @@ def add_constraint_matrix(my_problem, data):
     for d in range(data.dias):
         for correlativas in data.ordenes_correlativas:
             for tu in turnos_correlativos:
-                #print('t')
-                #print(data.nombres[data.indices['H'+str(correlativas[0])+'-'+str(tu[0])+'-'+str(d)]])# to check
-                #print(data.nombres[data.indices['H'+str(correlativas[1])+'-'+str(tu[1])+'-'+str(d)]])
                 indices = []
                 indices.append(data.indices['H'+str(correlativas[0])+'-'+str(tu[0])+'-'+str(d)])
                 indices.append(data.indices['H'+str(correlativas[1])+'-'+str(tu[1])+'-'+str(d)])
@@ -467,30 +357,58 @@ def add_constraint_matrix(my_problem, data):
     turnos_imposibles = [4,0]
     for d in range(data.dias):
         for correlativas in data.ordenes_correlativas:
-            #print('t')
-            #print(data.nombres[data.indices['H'+str(correlativas[0])+'-'+str(turnos_imposibles[0])+'-'+str(d)]])# to check
-            #print(data.nombres[data.indices['H'+str(correlativas[1])+'-'+str(turnos_imposibles[1])+'-'+str(d)]])
             indices = []
             indices.append(data.indices['H'+str(correlativas[0])+'-'+str(turnos_imposibles[0])+'-'+str(d)])
             indices.append(data.indices['H'+str(correlativas[1])+'-'+str(turnos_imposibles[1])+'-'+str(d)])
             values=[1.0,1.0]
             row = [indices, values]
-            #print(row)
             my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs=[0.0])
             
-        #La diferencia en la cantidad de ordenes asignadas al trabajador con más horas y el de menor cantidad de ordenes no puede ser mayor a 10.  
-    for t1 in range(data.cantidad_trabajadores):
-        for t2 in range(data.cantidad_trabajadores):
-            if trabajadora != trabajadorb:
+    #La diferencia en la cantidad de ordenes asignadas al trabajador con más horas y el de menor cantidad de ordenes no puede ser mayor a 10.  
+    
+    for i1 in range(data.cantidad_trabajadores):
+        for i2 in range(data.cantidad_trabajadores):
+            if i1 != i2:
                 indices = []
                 values = []
-                indices.append(data.indices['T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
+                indices.append(data.indices['T'+str(i1)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
                 values.append(1)
-                indices.append(data.indices['T'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
+                indices.append(data.indices['T'+str(i2)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
                 values.append(-1)
                 row = [indices,values]
                 my_problem.linear_constraints.add(lin_expr=[row], senses=["L"], rhs=[10])             
 
+    ### Restricciones deseables
+    ## Hay conflictos entre algunos trabajadores que hacen que prefieran no ser asignados a una misma orden de trabajo.
+
+    for t in range(data.turnos):
+        for d in range(data.dias):
+            for j in data.ordenes:
+                for conflictos in data.conflictos_trabajadores:
+                    indices = []
+                    values = []
+                    indices.append(data.indices['T'+str(conflictos[0])+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
+                    indices.append(data.indices['T'+str(conflictos[1])+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)])
+                    values=[1,1]
+                    row = [indices,values]
+                    my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs= [1.0])
+
+    ## Hay pares de ´ordenes de trabajo que son repetitivas por lo que ser´ıa bueno que un mismo trabajador no sea asignado a ambas.
+    #ordenes_repetitivas
+
+    for i in range(0,data.cantidad_trabajadores):
+        for repetitivas in data.ordenes_repetitivas:
+            indices = []
+            values = []
+            for d in range(data.dias):
+                for t in range(data.turnos):
+                    indices.append(data.indices['T'+str(i)+'-'+str(repetitivas[0])+'-'+str(t)+'-'+str(d)])
+                    indices.append(data.indices['T'+str(i)+'-'+str(repetitivas[1])+'-'+str(t)+'-'+str(d)])
+                    values.append(1)
+                    values.append(1)
+            row = [indices, values]
+            my_problem.linear_constraints.add(lin_expr=[row], senses=['L'], rhs=[1.0])
+    
 
 def populate_by_row(my_problem, data):
 
@@ -524,42 +442,29 @@ def populate_by_row(my_problem, data):
                 data.nombres.append('H'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d))
                 data.indices['H'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)] = len(coeficientes_funcion_objetivo)-1
     
-    #print("Todas las variables que cree:")              
-    #print(data.nombres)
-    
-    ### Agregar todas las variables cargadas en coeficientes_funcion_objetivo
-    
-    # Agrego momentáneamente a los trabajadores como si todos ganaran lo mismo, 10.
-    
-    #for i in range(data.cantidad_trabajadores):
-     #   for t in range(data.turnos):
-      #      for d in range(data.dias):
-       #         for j in data.ordenes:
-         #           coeficientes_funcion_objetivo.append(-1)
-          #          data.nombres.append('W'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d))
-           #         data.indices['W'+str(i)+'-'+str(vars(j)['id'])+'-'+str(t)+'-'+str(d)] = len(coeficientes_funcion_objetivo)-1
 
     for trabajador in range(data.cantidad_trabajadores):
         for tramo in range(1,4):
             coeficientes_funcion_objetivo.append(0)
             name = 'A'+str(tramo)+str(trabajador)
-            data.names.append(name)
+            data.nombres.append(name)
             data.indices[name]=len(coeficientes_funcion_objetivo)-1
 
-     # Creo esta variable auxiliar para usar después en el add de my_problem
+    # Creo esta variable auxiliar para usar después en el add de my_problem
     # Las variables de órdenes, trabajadores son binarias
     largo_binarias = len(coeficientes_funcion_objetivo)
     lower_bound = [0]*largo_binarias 
-    upper_bound = [1]*largo_binarias 
+    upper_bound = [1]*largo_binarias
+    types = ['B']*largo_binarias
 
     # Definimos las variables W1t, W2t, W3t, W4t que nos dan salario de tramos
-    salario = {1: 1000, 2: 1200, 3:1400, 4:1500}
+    salario = [1000, 1200, 1400, 1500]
     
     for trabajador in range(data.cantidad_trabajadores):
         for tramo in range(1,5):
-            coeficientes_funcion_objetivo.append(pagas[tramo]*(-1))
+            coeficientes_funcion_objetivo.append(salario[tramo-1]*(-1))
             name = 'W'+str(tramo)+'-'+str(trabajador)
-            data.names.append(name)
+            data.nombres.append(name)
             data.indices[name]=len(coeficientes_funcion_objetivo)-1
 
     t = my_problem.variables.type
@@ -573,20 +478,15 @@ def populate_by_row(my_problem, data):
     for trabajador in range(data.cantidad_trabajadores):
         coeficientes_funcion_objetivo.append(0)
         name = 'W'+str(trabajador)
-        data.names.append(name)
+        data.nombres.append(name)
         data.indices[name]=len(coeficientes_funcion_objetivo)-1
     
     lower_bound = lower_bound + [0] * (data.cantidad_trabajadores)
     upper_bound = upper_bound + [20] * (data.cantidad_trabajadores)
     types = types + [t.integer]*(data.cantidad_trabajadores)
 
-    my_problem.variables.add(obj = coeficientes_funcion_objetivo, lb = lb , ub = ub, types = types, names = data.names) 
+    my_problem.variables.add(obj = coeficientes_funcion_objetivo, lb = lower_bound , ub = upper_bound, types = types, names = data.nombres) 
 
-   # my_problem.variables.add(obj = coeficientes_funcion_objetivo,lb = lower_bound, ub = upper_bound,types=##['B']*len(coeficientes_funcion_objetivo))#,names = data.nombres)
-    
-    
-    
-    
     # Seteamos direccion del problema
     my_problem.objective.set_sense(my_problem.objective.sense.maximize)
     
@@ -608,7 +508,7 @@ def solve_lp(my_problem, data):
     objective_value = my_problem.solution.get_objective_value()
     status = my_problem.solution.get_status()
     status_string = my_problem.solution.get_status_string(status_code = status)
-
+    
     for item in range(len(x_variables)):
         if x_variables[item] == 1:
             print(data.nombres[int(item)])
@@ -626,14 +526,10 @@ def main():
     
     # Obtenemos los datos de la instancia.
     data = get_instance_data()
-    #print("mydata")
-    #print(vars(data)) 
     
     # Definimos el problema de cplex.
     prob_lp = cplex.Cplex()
     
-    
-        #--Facundo-- Acà està cagado
     # Armamos el modelo.
     populate_by_row(prob_lp,data)
 

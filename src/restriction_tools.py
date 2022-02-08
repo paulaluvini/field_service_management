@@ -1,4 +1,4 @@
-''' This code is going to define all the restrictions necessary to run the field service problem '''
+''' Código para definir todas las restricciones necesarias para correr el field_service.py '''
 
 def add_constraint_matrix(my_problem, data):
     

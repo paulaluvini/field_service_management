@@ -1,6 +1,6 @@
 # Optimization Problem
 
-Final assignment for the Optimization subject of the MSc in Data Science from Universidad de San Andrés.
+Final assignment for the Optimization subject of the MSc in Data Science from Universidad de San Andrés. Authors are Florencia Ludueña and Paula Luvini.
 
 ## Problem
 In this project, we focus on the weekly planning of work crews for different assigned tasks. We have a list of workers and a list of jobs to complete. The objective is to maximize total profit by considering the benefit of completing a job while accounting for worker compensation.

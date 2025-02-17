@@ -1,72 +1,70 @@
-# Optimización
- ## Problema 
+# Optimization Problem
 
-Muchas empresas ofrecen productos y servicios que se utilizan en una locación ajena a la misma. Muchas veces, estos productos o servicios dependen de ciertos trabajos como instalación, mantenimiento o inspección que deben ser realizados por cuadrillas que son asignadas especiﬁcamente a los diferentes trabajos. En las empresas donde este tipo de necesidades es moneda corriente (telcos, proveedores de energía o gas, entre otros) suele existir un área, Field Service Management, que enmarca todas estas actividades.
-En particular en este trabajo nos interesa la planiﬁcación semanal de las cuadrillas de trabajo a las diferentes órdenes enlistadas. En este problema vamos a contar con una lista de trabajadores y una lista de trabajos a realizar. El objetivo es maximizar la ganancia total, teniendo el cuenta el beneﬁcio que nos otorga resolver un trabajo y considerando los pagos a los trabajadores.
-El problema formalmente es el siguiente. Contamos con una cantidad T de trabajadores para realizar los trabajos. Por otro lado, tenemos una lista de O órdenes de trabajo a realizar. Cada orden requiere de una cantidad preﬁjada de trabajadores, denominada To. La semana a planiﬁcar tiene 6 días, ya que planiﬁcaremos de Lunes a Sábado. Cada día tiene 5 Turnos de 2 horas. Se asume que cada órden de trabajo se puede realizar utilizando un turno, y no se pueden realizar varias órdenes en un mismo turno si comparten trabajadores. La solución debe indicar cómo asignar los trabajadores a las órdenes, y a su vez cómo asignar las órdenes a los turnos, cumpliendo las siguientes restricciones necesarias para que la asignación sea factible:
+Final assignment for the Optimization subject of the MSc in Data Science from Universidad de San Andrés.
 
+## Problem
+In this project, we focus on the weekly planning of work crews for different assigned tasks. We have a list of workers and a list of jobs to complete. The objective is to maximize total profit by considering the benefit of completing a job while accounting for worker compensation.
 
-No toda orden de trabajo tiene que ser resuelta.
-- Ningú trabajador puede trabajar los 6 días de la planiﬁcación.
-- Ningún trabajador puede trabajar los 5 turnos de un día.
-- Hay pares de órdenes de trabajo que no pueden ser satisfechas en turnos consecutivos de un trabajador (Si bien en este problema no nos preocupamos por el ruteo sino solo por la asignación, hay órdenes tan lejanas geográficamente que no se podrían satisfacer consecutivamente).
-- Una órden de trabajo debe tener asignada sus To trabajadores en un mismo turno para poder ser resuelta.
-- Existen algunos pares de órdenes de trabajo correlativas. Un par ordenado de órdenes correlativas A y B, nos indica que si se satisface A, entonces debe satisfacerse B ese mismo d´ıa en el turno consecutivo.
-- Los trabajadores son remunerados según la cantidad de órdenes asignadas por lo que la diferencia entre el trabajador con más órdenes asignadas y el trabajador con menosórdenes no puede ser mayor a 10. Para esto se consideran todos los trabajadores, aún los que no tienen ninguna tarea asignada esta semana.
+Formally, the problem is defined as follows. We have **T** workers available for the tasks. Additionally, we have a list of **O** work orders to complete. Each order requires a predefined number of workers, **To**. The planning period consists of **6 days** (Monday to Saturday), with each day divided into **5 shifts of 2 hours**. Each work order can be completed within a single shift, and multiple orders cannot be scheduled in the same shift if they share workers. The solution must assign workers to work orders and schedule them in shifts while meeting the following constraints:
 
+- Not all work orders need to be completed.
+- No worker can be scheduled for all **6 days** of the planning period.
+- No worker can be assigned to all **5 shifts** in a single day.
+- Some work orders are geographically distant, meaning they cannot be assigned to consecutive shifts for the same worker.
+- A work order must have all **To** required workers assigned to the same shift to be completed.
+- Some orders are correlated: If order **A** is completed, then order **B** must also be completed in the consecutive shift of the same day.
+- Workers are compensated based on the number of orders assigned. The difference between the worker with the highest number of assigned orders and the worker with the least (including those with no assignments) cannot exceed **10**.
 
-Si se cumplen las anteriores restricciones, la asignación es factible. De todas maneras, existen dos restricciones más que son deseables. Es decir, vamos a querer evaluar si se pueden intentar cumplir o estar cerca de ello. Estas dos restricción son:
+If these constraints are met, the assignment is feasible. Additionally, there are two desirable (but not mandatory) constraints:
 
+- Some workers prefer not to be assigned to the same work order due to conflicts.
+- Some work orders are repetitive, so it is preferable that the same worker is not assigned to both.
 
-- Hay conﬂictos entre algunos trabajadores que hacen que preﬁeran no ser asignados a una misma orden de trabajo.
-- Hay pares de órdenes de trabajo que son repetitivas por lo que sería bueno que un mismo trabajador no sea asignado a ambas.
+Once the necessary constraints are met, the objective is to maximize the **profit of the assignment**, defined as the sum of the benefits of completed work orders minus worker compensation. Worker compensation follows this scheme:
 
+- **0 to 5 orders**: $1000 per order
+- **6 to 10 orders**: $1200 per order
+- **11 to 15 orders**: $1400 per order
+- **More than 15 orders**: $1500 per order
 
+## Context
 
-Una vez cumplidas las restricciones necesarias, el objetivo de nuestra solució es maximizar la ganancia de la asignació. La ganancia de la asignació se deﬁne como la suma de los beneﬁcios de las órdenes satisfechas menos la remuneració otorgada a cada trabajador. Los trabajadores son remunerados según el siguiente esquema:
+A preliminary implementation of the problem is available, including data input from an instance. The data includes the number of workers, work orders with their respective benefits and required workforce, correlated work orders, conflicting orders, repetitive orders, and worker conflicts. After reading the data, it is stored in an instance of the `FieldWorkAssignment` class, which contains:
 
-- Si realizan entre 0 y 5 órdenes: Obtienen una remuneración de 1000 por cada orden.
--  Si realizan entre 6 y 10 órdenes: Obtienen una remuneración de 1200 por cada orden.
--  Si realizan entre 11 y 15 órdenes: Obtienen una remuneración de 1400 por cada orden. 
--  Si realizan más de 15 órdenes: Obtienen una remuneración de 1500 por cada orden.
+- **Number of workers**: Integer representing available workers.
+- **Work orders**: List of all weekly work orders.
+- **Worker conflicts**: List of worker pairs with conflicts.
+- **Correlated work orders**: List of ordered pairs of correlated work orders.
+- **Conflicting work orders**: List of conflicting work orders.
+- **Repetitive work orders**: List of repetitive work orders.
 
-## Contexto
-Contamos con una implementación preliminar para nuestro problema con la lectura de los datos necesarios de una instancia. En estos datos se encuentran los mencionados anterior-mente, particularmente la cantidad de trabajadores, las. órdenes de trabajo con su respectivo beneﬁcio y su cantidad necesaria de trabajadores, la lista de órdenes correlativas, la lista de órdenes conﬂictivas, la lista de órdenes con tareas repetitivas y la lista de trabajadores con conﬂictos. Luego de realizar la lectura de los datos, estos se encuentran guardados en una instancia de la clase FieldWorkAssignment que contiene los siguientes campos:
+Each work order contains the following fields:
 
-- cantidad trabajadores: un entero que representa la cantidad de trabajadores. 
-- ordenes: una lista que contiene todas las órdenes de la semana.
-- conflictos trabajadores: una lista con pares de trabajadores que conﬂictúan entre sí
-- ordenes correlativas: una lista con pares ordenados de identiﬁcadores de órdenes correlativas.
-- ordenes conflictivas: una lista con pares de identiﬁcadores de  órdenes conﬂictivas.
-- ordenes repetitivas: una lista con pares de identiﬁcadores de órdenes repetitivas.
+- **ID**: Unique integer identifier.
+- **Benefit**: Integer representing the value of completing the order.
+- **Required workers**: Number of workers needed for completion.
 
+## Task Description
 
-A su vez, una orden de trabajo contiene los siguientes campos:
-- id: un entero identiﬁcador de la orden
-- beneficio: un entero que representa el beneﬁcio que nos da una orden si la satisfacemos.
-- trabajadores necesarios: un entero que representa la cantidad de trabajadores necesarios para satisfacerla.
+The task involves modeling and solving the optimization problem, implementing provided code to handle different instances, and delivering a report covering the following aspects:
 
-## Enunciado
-La resolución del trabajo consiste en la realización de modelos que se adecuen al problema, completar los códigos provistos para poder resolver diferentes instancias del problema y la entrega de un informe donde se detallen los puntos a continuación. Se pide:
+1. **Modeling**: Formulating a model that meets all constraints and incorporates the objective function.
+2. **Desirable Constraints**: Reformulating the model to include these constraints as additional constraints or objective function terms.
+3. **Implementation**: Developing and implementing proposed alternatives using CPLEX.
+4. **Experimentation**: Conducting experiments with different alternatives to analyze results both quantitatively and qualitatively.
 
-1.	Modelo: Formular un modelo que cumpla todas las restricciones para realizar una asignación y que tenga en cuenta la función objetivo enunciada.
-2.	Restricciones deseables: Reformular el modelo para tener en cuenta las restricciones deseables. Se deben tener en cuenta tanto como restricciones nuevas, como términos de la función objetivo.
-3.	Implementación: Realizar la implementación de las alternativas propuestas utilizando CPLEX.
-4.	Experimentación: Realizar experimentación sobre las diferentes alternativas para lograr una discusión tanto cuantitativa como cualitativa de los resultados obtenidos.
+## Solution Approach
 
+Initially, we have information about workers, work orders, required workforce, order benefits, worker conflicts, correlated orders, conflicting orders, and repetitive orders.
 
-
-# Resolución 
-
-Inicialmente tenemos información cantidad de trabajadores, cantidad de ordenes, cantidad de trabajadores necesarios, beneficios de cada orden, conflictos entre trabajadores, ordenes correlativas, ordenes conflictivas, ordenes repetitivas. 
-
-- Para que una orden se realice debe tener asignado la cantidad de trabajadores necesarios. 
+- To complete an order, it must have the required number of assigned workers:
 
 ```math
-trabajadores asignados a cada orden >= cantidad de trabajadores necesarios
-```
-Como los trabajadores generan un costo, cumplimos la restricción con igual.
-```math
-trabajadores asignados a cada orden - la cantidad de trabajadores necesarios de cada orden = 0 
+assigned\_workers(order) \geq required\_workers(order)
 ```
 
+Since workers generate a cost, we enforce equality:
+
+```math
+assigned\_workers(order) - required\_workers(order) = 0
+```
